@@ -197,7 +197,7 @@ SSE 事件帧(在 ch01 的 `delta`/`error`/`[DONE]` 基础上新增 `tool`、`do
 | 工具链落点 | 长在前端在用的 `/api/chat` | 能力要落在用户实际使用的聊天入口上;只做独立程序化接口,用户视角里等于没交付 |
 | 编排结构 | 抽共享核心 `_prepare_turn` + `stream_agent_turn`(流式)/ `run_agent_turn`(非流式)两出口 | 两出口只在收敛那步不同,不重复实现 |
 | 流式与工具 | turn1 `ainvoke` 拿完整 tool_calls,收敛用 `astream` 逐 token | 工具调用需完整参数,不能边流边判;最终答案可流式(Context7 已核对) |
-| 工具轨迹呈现 | SSE `tool` 帧 → 气泡灰字徽章 | 用户选「显示小徽章」,课程演示肉眼可见工具被调 |
+| 工具轨迹呈现 | SSE `tool` 帧 → 气泡灰字徽章 | 用户选「显示小徽章」,肉眼可见工具被调 |
 | 会话持久化 | `/api/chat` 落 DB(conversations/messages),不用内存 SessionStore | 与工具轨迹落库统一;跨轮上下文有源 |
 | system prompt | 客服 chat 统一用 `AGENT_SYSTEM`(带工具原则) | 既懂工具又保客服人设 |
 | `/api/agent` | 保留为非流式程序化/测试出口 | 供 eval/脚本/单测一眼看轨迹,不与前端流式重复 |

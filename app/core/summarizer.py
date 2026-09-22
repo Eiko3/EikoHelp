@@ -1,7 +1,3 @@
-# 来源：公众号@小林coding
-# 后端八股网站：xiaolincoding.com
-# Agent网站：xiaolinnote.com
-# 简历模版：jianli.xiaolinnote.com
 """ch07 后台滚动摘要:轮结束后计数触发,asyncio 后台跑,不阻塞当轮回复。
 失败只 log 不重试——触发条件仍满足,下一轮自然重触发;summary 两字段只在成功后原子更新。"""
 import asyncio

@@ -1,7 +1,3 @@
-# 来源：公众号@小林coding
-# 后端八股网站：xiaolincoding.com
-# Agent网站：xiaolinnote.com
-# 简历模版：jianli.xiaolinnote.com
 """ch10 验收 API:把原本只能在终端看的九项实证搬上页面。只读 + 作业发起,不改任何产物。
 
 数据来源分两类:
@@ -299,7 +295,7 @@ async def errors_detail() -> dict:
         "total_fp": evaluation["total_fp"], "total_fn": evaluation["total_fn"],
         "pairs": [{"missed": m, "grabbed": g, "count": c, "severity": SEVERITY.get(m)}
                   for (m, g), c in sorted(pairs.items(), key=lambda x: -x[1])],
-        # 三种错各自的修法配方(课程结论,不是每条错例的具体补句)
+        # 三种错各自的修法配方(实测结论,不是每条错例的具体补句)
         "recipes": {
             "漏打": "次要诉求被主旋律淹没 → 补「主诉求 + 顺带诉求」的双标签句",
             "错位": "某个词横跨两类 → 成对补对照句,两边同时喂才学得会看语境",

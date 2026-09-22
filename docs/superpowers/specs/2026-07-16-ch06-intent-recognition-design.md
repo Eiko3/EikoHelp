@@ -2,7 +2,7 @@
 
 ## 1. 背景与目标
 
-ch05 骨架把分流器前段留成占位:`resolve_reference`(指代消解)原样透传、`classify_intent` 单标签七类无 confidence/无「其他」、`retrieve_knowledge` 只做同义词轻扩、`route_by_intent` 无退款子流程。本章按权威章节 `eikohelp-course/ch06-intent-recognition/README.md` 把这个"分流器"做成正式版。
+ch05 骨架把分流器前段留成占位:`resolve_reference`(指代消解)原样透传、`classify_intent` 单标签七类无 confidence/无「其他」、`retrieve_knowledge` 只做同义词轻扩、`route_by_intent` 无退款子流程。本章把这个"分流器"做成正式版。
 
 **目标(需求 7 条):**
 1. **指代消解 + Query 改写(合一)**:LLM 结合最近几轮历史,把「它能退吗」补全成脱离上下文也能看懂的完整问句;已完整/指代已明确的原样透传,不强改。
@@ -13,9 +13,9 @@ ch05 骨架把分流器前段留成占位:`resolve_reference`(指代消解)原�
 6. **前端配套**:订单选择器做成聊天流里可点选的订单卡片,点选自动回填、流程接着走;退款单是简单表单,退款原因固定类目下拉。
 7. **模型配置**:意图识别默认配够格大模型(先求准);降级路(小模型判+置信度、低置信升级大模型)本章只落配置种子。
 
-**非目标(本章不做):** 微调小模型/BERT 意图分类;跨会话记忆;意图降级路的运行时实现(仅配置种子);两级分类 / 检索式意图识别(README 明标"面试延伸、不在本课范围");ch06 图 21 SVG 暂不动(用户定)。
+**非目标(本章不做):** 微调小模型/BERT 意图分类;跨会话记忆;意图降级路的运行时实现(仅配置种子);两级分类 / 检索式意图识别(超出本项目范围);ch06 图 21 SVG 暂不动(用户定)。
 
-**权威来源:** `eikohelp-course/ch06-intent-recognition/README.md`(章节)+ 本 spec(本仓设计)。ch05 基线已对齐:节点名 `resolve_reference / retrieve_knowledge / main_agent`,置信度闸在 Agent 之前(生成前证据闸,ch05 D3,ch06 不动)。
+**权威来源:** 本 spec(本仓设计)。ch05 基线已对齐:节点名 `resolve_reference / retrieve_knowledge / main_agent`,置信度闸在 Agent 之前(生成前证据闸,ch05 D3,ch06 不动)。
 
 ---
 

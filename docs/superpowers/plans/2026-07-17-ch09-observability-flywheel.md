@@ -4,7 +4,7 @@
 
 **Goal:** 给客服系统接 Langfuse 全链路观测 + 按意图 token 账,并建成"三入口低置信度问题池 → 标准化查重待审队列 → 人工审核写回知识库"的数据飞轮闭环,配自动化评估趋势流水线。
 
-**Architecture:** 方案 A"回调为主、脚本为辅"——观测靠 `compile().with_config({"callbacks":[CallbackHandler()]})` 编译时挂一次吃全图(课程 README 姿势);飞轮/评估/成本统计是 make 驱动的批处理脚本;审核后台 = 静态单页 + REST。Spec:`docs/superpowers/specs/2026-07-17-ch09-observability-flywheel-design.md`,课程对齐:`eikohelp-course/ch09-observability-flywheel/README.md`。
+**Architecture:** 方案 A"回调为主、脚本为辅"——观测靠 `compile().with_config({"callbacks":[CallbackHandler()]})` 编译时挂一次吃全图(既定姿势);飞轮/评估/成本统计是 make 驱动的批处理脚本;审核后台 = 静态单页 + REST。Spec:`docs/superpowers/specs/2026-07-17-ch09-observability-flywheel-design.md`。
 
 **Tech Stack:** Langfuse v3 自部署(独立 docker compose)、langfuse Python SDK(`langfuse.langchain.CallbackHandler`)、LangGraph、SQLAlchemy 2.0 async、FastAPI、复用 ch03 dualwrite / ch04 评估集与指标 / ch05 图节点。
 
@@ -349,7 +349,7 @@ git commit -m "feat(ch09): 飞轮地基——review_queue/eval_runs ORM + 问题
 - [ ] **Step 1: Context7 查证(执行时必做)**
 
 用 Context7 查 `/langfuse/langfuse-python` 确认两点(2026-07 文档口径,执行时以实装版本为准):
-1. `Langfuse(public_key=..., secret_key=..., ...)` 的地址构造参名(`host` 还是 `base_url`)——环境变量口径按课程 README 与 SDK 文档一致的 `LANGFUSE_BASE_URL`(settings 字段 `langfuse_base_url`),构造参名以 SDK 实际签名为准;
+1. `Langfuse(public_key=..., secret_key=..., ...)` 的地址构造参名(`host` 还是 `base_url`)——环境变量口径与 SDK 文档一致的 `LANGFUSE_BASE_URL`(settings 字段 `langfuse_base_url`),构造参名以 SDK 实际签名为准;
 2. `langfuse.langchain.CallbackHandler`(无参构造,复用已初始化单例)与 `get_client().update_current_trace(metadata=..., tags=...)` 可用性。
 
 - [ ] **Step 2: 加依赖**
@@ -364,7 +364,7 @@ uv add langfuse
 
 ```python
     # ch09 可观测(Langfuse 自部署;三者齐全才挂回调,缺省时系统照常跑、测试环境不依赖)
-    # 环境变量名与课程 README 一致:LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY / LANGFUSE_BASE_URL
+    # 环境变量名与 SDK 文档一致:LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY / LANGFUSE_BASE_URL
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_base_url: str = ""     # 如 http://localhost:3000(自部署地址,数据不出门)
@@ -424,7 +424,7 @@ Run: `uv run pytest tests/core/test_observability.py -v` → FAIL(模块不存�
 ```python
 """ch09 可观测:Langfuse 挂载与 trace 标注,全部可选降级。
 
-课程 README 姿势:设三个环境变量 + 图编译时挂一次回调,节点业务代码零侵入。
+接入姿势:设三个环境变量 + 图编译时挂一次回调,节点业务代码零侵入。
 项目配置经 pydantic-settings(.env),不依赖 os.environ,故显式传参初始化单例。
 所有对外函数在未配置 Langfuse 时必须是安全 no-op——观测是增强,不是依赖。
 """

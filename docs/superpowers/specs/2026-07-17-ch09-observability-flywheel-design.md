@@ -1,6 +1,6 @@
 # Ch09 设计:可观测性与数据飞轮(Langfuse 接入 + Cost Control + 三入口问题池 + 标准化查重待审 + 人工审核写回 + 评估趋势)
 
-> 对齐课程文档 `eikohelp-course/ch09-observability-flywheel/README.md`:前半装可观测性(Langfuse 调用树、按意图算 token 账、评估趋势线),后半装数据飞轮(三入口低置信度问题池 → 标准化查重 → 人工审核三道闸 → 写回知识库闭环)。
+> 前半装可观测性(Langfuse 调用树、按意图算 token 账、评估趋势线),后半装数据飞轮(三入口低置信度问题池 → 标准化查重 → 人工审核三道闸 → 写回知识库闭环)。
 
 ## 1. 背景与目标
 
@@ -20,13 +20,13 @@ ch02-ch08 把主力 Agent 的能力搭齐了,但线上是个黑盒:每一步想�
 
 **非目标(本章不做):**
 - 低置信度问题按主题归类的微调分类器(下一章正题)。
-- LangSmith(课程只作对比提及,数据出境,不接)。
+- LangSmith(仅作对比提及,数据出境,不接)。
 - Langfuse 里配自定义模型单价算钱(统计以 token 数为准,单价配置留给运营在界面自己做)。
 - 真·进程内定时器(APScheduler 等):飞轮与评估都是脚本 + make 驱动,交付物里给 cron 示例,不引调度框架。
 - 👍 落任何库(需求只要求 👎 落池;👍 后端收到只记日志)。
 - MCP 工具内部(`query_faq` 等)的落池改造之外的行为变更。
 
-**技术栈(定死):** Langfuse 开源自部署(v3,官方 docker compose 栈),链路数据不出自家服务器;回调用 `langfuse.langchain.CallbackHandler`(与课程 README 代码一致)。库/框架 API 用法(FastAPI、SQLAlchemy、LangChain、LangGraph、Langfuse)实现前一律 Context7 查最新文档,不凭记忆写。
+**技术栈(定死):** Langfuse 开源自部署(v3,官方 docker compose 栈),链路数据不出自家服务器;回调用 `langfuse.langchain.CallbackHandler`(与既定实现一致)。库/框架 API 用法(FastAPI、SQLAlchemy、LangChain、LangGraph、Langfuse)实现前一律 Context7 查最新文档,不凭记忆写。
 
 **用户澄清决策(brainstorm 定稿):**
 - **Langfuse 部署**:独立 `docker-compose.langfuse.yml` + `make langfuse-up/down`,不并入现有 compose,不用 v2 精简版。
@@ -34,7 +34,7 @@ ch02-ch08 把主力 Agent 的能力搭齐了,但线上是个黑盒:每一步想�
 - **查重范围**:和 `review_queue` **全部行**比对;命中已驳回/已通过的行只累加 `occurrence_count`、**状态不变**(驳回即终审,不复活、不新建重复行)。
 - **👎 快照**:尽力回捞——从该会话 checkpointer state 取最近一轮召回快照,对不上就空着。
 - **整体架构**:方案 A"回调为主、脚本为辅"——观测靠编译时挂一次 CallbackHandler 吃全图,不做逐节点 @observe 插桩;飞轮/评估是批处理脚本;审核页是静态单页 + REST。
-- spec 直接写完整版对齐课程 README,不逐批确认。
+- spec 直接写完整版,不逐批确认。
 
 ## 2. 架构与数据流
 
@@ -73,7 +73,7 @@ ch02-ch08 把主力 Agent 的能力搭齐了,但线上是个黑盒:每一步想�
 
 ### 3.2 配置与挂载
 
-- `app/config.py` 新增:`langfuse_public_key` / `langfuse_secret_key` / `langfuse_base_url`(均默认空字符串)。环境变量名与课程 README 及 SDK 文档一致:`LANGFUSE_BASE_URL`(已 Context7 核实);`Langfuse(...)` 构造参名(host/base_url)实装时再核。
+- `app/config.py` 新增:`langfuse_public_key` / `langfuse_secret_key` / `langfuse_base_url`(均默认空字符串)。环境变量名与 SDK 文档一致:`LANGFUSE_BASE_URL`(已 Context7 核实);`Langfuse(...)` 构造参名(host/base_url)实装时再核。
 - `runtime.init_graph()`:编译完图后,**三个配置齐全才** `.with_config({"callbacks": [CallbackHandler()]})`,否则原样返回——观测是可选增强,不成为启动硬依赖,测试环境不需要 Langfuse。
 - 会话归属:每次 invoke/astream 的 config 里把 `conversation_id` 传成 Langfuse 的 session(v3 用 `metadata={"langfuse_session_id": ...}` 之类的键,准确键名 Context7 定),同一会话多轮在界面串成一组。
 - 依赖:`pyproject.toml` 加 `langfuse`。
@@ -169,7 +169,7 @@ state 新字段(`app/graph/state.py`):`evidence_confidence: float`、`fallback_s
 
 ### 7.2 标准化 + 查重(`app/core/flywheel.py` 新)
 
-- Prompt(`app/core/prompts.py` 加 `FLYWHEEL_NORMALIZE_PROMPT`):输入用户原话 + 候选问题列表(`review_queue` 全部行的 `id + normalized_question`,按 `updated_at` 倒序截 200 条防 token 爆),模型**一次输出**(与课程 README 的 JSON 形状一致):
+- Prompt(`app/core/prompts.py` 加 `FLYWHEEL_NORMALIZE_PROMPT`):输入用户原话 + 候选问题列表(`review_queue` 全部行的 `id + normalized_question`,按 `updated_at` 倒序截 200 条防 token 爆),模型**一次输出**(固定 JSON 形状):
 
 ```json
 {
@@ -229,7 +229,7 @@ approve 时:以 `normalized_question` + `approved_answer` 构造一条 QA 知识
   - 列表:标准化问题、出现次数(降序)、示例答案摘要、状态筛选(默认待审);
   - 行操作:通过(弹框填核准答案,预填 `ai_suggested_answer`)/ 驳回;
   - 行详情展开:归并进来的用户原话列表(带入池入口 source 标签、时间)+ 每条的召回片段快照卡(原文 + 得分)——审核人对着快照判断"知识库真缺这块,还是有但没检到";
-  - 页顶放审核三道闸提示文案(垃圾过滤 / 时效 / 频次,课程 README 的审核要点);
+  - 页顶放审核三道闸提示文案(垃圾过滤 / 时效 / 频次,审核三要点);
   - 样式复用 index.html 的猫咪 CSS 变量与卡片风格。
   - 具体交互效果按 vibe coding:先出一版,用户描述效果再改。
 - **审核页属于后台管理的一块**:与知识库录入页(`/kb`)共用 ch03 搭好的那套外壳——一份共用导航(`app/static/admin.js` 的 `mountAdminNav`)+ 聚合首页 `/admin` 上占一张卡(待审 / 通过 / 驳回三个数 + 一句结论)。审核页仍在 `/review` 这个原路径上——导航只是把入口收到一处,不改各页地址。
@@ -285,7 +285,7 @@ approve 时:以 `normalized_question` + `approved_answer` 构造一条 QA 知识
 ## 13. 风险与开放问题
 
 - **Langfuse v3 compose 较重**(6 容器):独立 compose 已隔离;机器吃紧时验收 1/5 单独起。
-- **SDK API 形态**(CallbackHandler 构造、session/metadata 键名、update_current_trace、Metrics API 分组能力)一律以 Context7 查到的 v3 文档为准,README 示例仅作对齐参照;若查实与课程 README 写法冲突,停下来向用户确认(工作要求 4)。
+- **SDK API 形态**(CallbackHandler 构造、session/metadata 键名、update_current_trace、Metrics API 分组能力)一律以 Context7 查到的 v3 文档为准,SDK 文档仅作对齐参照;若查实与 SDK 实际行为冲突,停下来向用户确认(工作要求 4)。
 - **ENUM 中文值**(`'待审'` 等)的 ORM 映射与 charset:DDL 已 utf8mb4,SQLAlchemy 侧用字符串值 Enum;测试库重建走 conftest 既有 DDL 解析,ch09-ddl.sql 的 CREATE+ALTER 符合其范式。
 - **approve 同步向量化依赖嵌入上游在线**:失败回滚 + 明确报错,审核页提示重试;不做异步补偿队列(YAGNI)。
 - **查重候选截断**(200 条):教学规模够用;截断时日志说明,不静默。

@@ -23,7 +23,6 @@
 
 ## 权威来源
 - spec:`docs/superpowers/specs/2026-07-16-ch06-intent-recognition-design.md`
-- 章节:`eikohelp-course/ch06-intent-recognition/README.md`(扩写 prompt L33-48;意图四件套 prompt L120-140;`route_by_intent` L208-220;缺信息执行阶段补 L168-182;分流出口 L184-224)
 
 ---
 

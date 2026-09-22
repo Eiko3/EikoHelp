@@ -1,9 +1,3 @@
-/*
-  来源：公众号@小林coding
-  后端八股网站：xiaolincoding.com
-  Agent网站：xiaolinnote.com
-  简历模版：jianli.xiaolinnote.com
-*/
 /* ch10 验收页共享脚本:四个页面公用的取数、提示、导航、以及「重跑」按钮那一套。
 
 重跑的交互契约:POST 发起 → 每 1.2s 轮询状态与日志尾 → 收到终态(ok/failed/stopped)

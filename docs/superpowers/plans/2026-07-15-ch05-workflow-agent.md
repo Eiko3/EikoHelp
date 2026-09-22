@@ -22,7 +22,6 @@
 
 ## 权威来源
 - spec:`docs/superpowers/specs/2026-07-15-ch05-workflow-agent-design.md`
-- 章节:`eikohelp-course/ch05-workflow-agent/README.md`
 
 ---
 

@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- 对齐 spec:`docs/superpowers/specs/2026-07-18-ch10-topic-classifier-design.md`;对齐课程 `eikohelp-course/ch10-fine-tuning/README.md`,不漏功能点。
+- 对齐 spec:`docs/superpowers/specs/2026-07-18-ch10-topic-classifier-design.md`;不漏功能点。
 - 技术选型定死:RoBERTa-wwm-ext(`hfl/chinese-roberta-wwm-ext`)全参微调、不用 LoRA/QLoRA;ONNX + 独立 FastAPI 服务;实现走不通**停下来问用户,不许自行换方案**。
 - 涉及库 API(transformers/torch/onnxruntime/FastAPI/SQLAlchemy/LangChain)先 Context7 查最新文档再动手。已查证并写死进本计划:TrainingArguments 用 `eval_strategy`(不是 evaluation_strategy);Trainer 用 `processing_class=`(不是 tokenizer=);`load_best_model_at_end=True` 要求 save/eval strategy 一致;EarlyStoppingCallback 要求设 `metric_for_best_model`;torch 2.9+ `torch.onnx.export` 默认 `dynamo=True`,导 HF 模型走稳定路线**必须显式 `dynamo=False`** 配 `dynamic_axes`。
 - 每完成一个任务:在 `dev-notes/ch10.md` 追记一段(用户关键原话/关键产出/纠偏/翻车返工),**不许收尾时一次性补记**;dev-notes 不进 git(仓库 .gitignore 惯例)。
@@ -102,7 +102,7 @@ Expected: FAIL(ModuleNotFoundError: app.core.taxonomy)
 ```python
 """ch10 权威归并术语表:全系统唯一一份,17 类主题类目。
 数据处理、预标、训练、推理、评测、前端全部 import 这里,不许各自抄一份。
-类目名与边界说明采用课程 README 归并术语表原文;元组顺序即 label id,训练/推理共用。
+类目名与边界说明采用归并术语表原文;元组顺序即 label id,训练/推理共用。
 severity 是容错档位:归错会带偏补知识优先级的类目从严。"""
 from dataclasses import dataclass
 
@@ -180,7 +180,7 @@ Expected: 解析成功装上 torch/transformers 等(首次下载较久)
 
 ```bash
 git add pyproject.toml .gitignore uv.lock app/core/taxonomy.py tests/core/test_taxonomy.py
-git commit -m "feat(ch10): 权威类目表 taxonomy.py(17 类,课程 README 原表)+ ml 依赖组"
+git commit -m "feat(ch10): 权威类目表 taxonomy.py(17 类,权威类目表)+ ml 依赖组"
 ```
 
 ---
@@ -1853,7 +1853,7 @@ git commit -m "feat(ch10): 验收 API + 白名单作业运行器(make 目标搬�
 - `acceptance-data.html`:语料血缘四段落差 + 文件盘点表 + 三份考卷分布(类目为行、三卷为列)与泄漏自检硬闸 + 训练三件套 + ONNX 产物;
 - `acceptance-errors.html`:记账口径(错例条数 ≠ 矩阵笔数)+ 边界摩擦配对表(同一对出现 ≥2 次标红)+ 逐条错例(放跑标红、冤枉标橙、对上的标绿)。
 
-页面标题用产品口径(「分类器验收总览」等),不写章节编号——课程编号不该出现在产品后台。
+页面标题用产品口径(「分类器验收总览」等),不写章节编号——内部编号不该出现在产品后台。
 
 `app/main.py` 加四条路由;新页面不成孤岛靠的是共用导航,不是各页互相手写链接。
 
