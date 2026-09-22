@@ -1,7 +1,19 @@
 [project]
 name = "eikohelp"
 version = "0.1.0"
+description = "电商智能客服 Agent:订单物流、FAQ 检索问答、退款子流程、知识飞轮、主题分类器微调"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Eiko" }]
 requires-python = ">=3.12"
+keywords = ["ai-agent", "customer-service", "rag", "langgraph", "mcp", "fastapi", "milvus"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "aiosqlite>=0.20",
     "asyncmy>=0.2.9",

@@ -12,19 +12,49 @@ FastAPI + LangGraph / LangChain + SQLAlchemy / MySQL + Milvus。
 聊天、嵌入、重排三组上游各自直连，没有网关那一层。模型名和地址都在 `.env` 里配
 (`CHAT_*` / `EMBED_*` / `RERANK_*` 三组)，换供应商、换模型不用改代码。
 
+## 环境要求
+
+| 项 | 要求 |
+| - | - |
+| uv | 包管理与 Python 运行时管理（Python 版本不用自己装，uv 会拉） |
+| Docker | 跑 MySQL / Milvus / MinIO / etcd 四个依赖容器 |
+| 内存 / 磁盘 | 8G 内存起步，10G 空闲磁盘（含 Docker 镜像） |
+| 模型密钥 | 一家 OpenAI 兼容上游的 API Key（默认配置按硅基流动给的，注册一个账号即可跑通全部章节） |
+
 ## 跑起来
 
 ```bash
-cp .env.example .env      # 填 CHAT_* / EMBED_* / RERANK_* 三组
-docker compose up -d      # MySQL
-make seed                 # 灌业务测试数据
+cp .env.example .env      # 填 CHAT_* / EMBED_* / RERANK_* 三组密钥
+uv sync                   # 装依赖
+docker compose up -d      # MySQL / Milvus / MinIO / etcd（首次启动自动建表+灌种子数据）
+make kb-build             # 知识库切块落 MySQL
+make kb-vectorize         # 向量化写进 Milvus（会调嵌入接口）
 make dev                  # 依赖容器 + MCP :8101/:8102 + 应用 :8000
 ```
 
 浏览器打开 <http://localhost:8000> 就是聊天页。
 
-**详细的安装、配置、建知识库、常见问题，看飞书那篇「EikoHelp 项目源码下载」**，
-这里只留一条能把服务拉起来的最短路径。两边写岔了以那篇为准。
+**Windows 图省事**：仓库根目录有两个双击即用的启动器——`启动EikoHelp.bat` 起服务并打开
+聊天页，`打开后台管理.bat` 打开后台管理页（服务已在跑时不会重复起进程）。它们只是把上面
+的 `make dev` 最短路径包了一层，Linux / macOS 用 Makefile 即可。
+
+### 两种部署姿势
+
+- **自己动手**：上面的命令就是最短路径，每步的验收标准、常见坑（镜像拉不动、端口冲突、
+  密钥填错的症状）都写在 [`DEPLOY.md`](DEPLOY.md)。
+- **丢给 AI 编程助手**：把 [`DEPLOY.md`](DEPLOY.md) 交给 Claude Code、Cursor 之类的工具，
+  说一句「按 DEPLOY.md 把项目部署起来」，它会自己走完全部步骤并自验收。
+
+### 验收装好了没有
+
+```bash
+printf '{"user_id":"u1","message":"订单 1001 的物流到哪了"}' > /tmp/q.json
+curl -s --max-time 90 http://localhost:8000/api/agent \
+     -H 'Content-Type: application/json' --data-binary @/tmp/q.json
+```
+
+返回 JSON 的 `tool_calls` 里出现 `query_order` 和 `query_logistics`、`answer` 里有物流状态，
+就是部署成功了。
 
 ## 代码怎么组织
 
@@ -59,10 +89,10 @@ make dev                  # 依赖容器 + MCP :8101/:8102 + 应用 :8000
 | ch09 | Langfuse 自部署、数据飞轮、成本账 | `make langfuse-up` `make flywheel` `make eval-flywheel` `make cost-report` |
 | ch10 | 主题分类器。语料、微调、阈值扫描、ONNX 推理服务 | `make ch10-corpus` `make ch10-train` `make ch10-eval` |
 
-每条命令的前置条件（哪些服务得先起、哪张表得先建）写在飞书那篇文档的「各章验收」段里。
-`make help` 也能看到带说明的完整目标清单。
+每条验收命令的前置条件（哪些服务得先起、哪张表得先建）用 `make help` 看，每个目标
+都带了说明；部署层面的前置条件在 [`DEPLOY.md`](DEPLOY.md)。
 
-## 端口
+## 端口与页面
 
 | 端口 | 是什么 |
 | - | - |
@@ -72,5 +102,14 @@ make dev                  # 依赖容器 + MCP :8101/:8102 + 应用 :8000
 | 3000 | Langfuse（`make langfuse-up` 之后） |
 | 19530 | Milvus |
 
-应用那几个页面：`/` 聊天、`/kb` 知识库录入、`/review` 飞轮待审、`/observability` 观测与成本、
-`/topics` 主题分布、`/acceptance` 分类器验收。
+应用页面：`/` 聊天、`/admin` 后台管理、`/kb` 知识库录入、`/review` 飞轮待审、
+`/observability` 观测与成本、`/topics` 主题分布、`/acceptance` 分类器验收。
+
+## 参与贡献
+
+发现问题欢迎提 [Issue](../../issues)；修 Bug、补文档直接开 Pull Request 就行，
+不用先问。开发环境就是上面的「跑起来」那一套，提 PR 前跑一下 `make test`。
+
+## License
+
+[MIT](LICENSE)
